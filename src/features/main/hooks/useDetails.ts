@@ -1,27 +1,29 @@
-import $api from "@/shared/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { detailsService } from "../services";
+import { DetailsProps } from "../types";
 
-export const useDetails = (code: string) => {
-  const [data, setData] = useState<any>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+export const useDetails = () => {
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [results, setResults] = useState<DetailsProps[]>([]);
 
-  const url = code ? `/search/${code}` : "/search/";
+  const searchDetails = async (code: string) => {
+    setIsSearching(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await $api.get(url);
-        const data = response.data;
-        setLoading(false);
-        setData(data);
-      } catch (error) {
-        setLoading(false);
-        console.log(error);
-      }
-    };
+    try {
+      const data = await detailsService.getDetails(code);
+      setResults(data);
+      setIsSearching(false);
+    } catch (error) {
+      console.error(error);
+      setResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
-    fetchData();
-  }, [code]);
-
-  return { detailsData: data, isLoading: loading };
+  return {
+    detailsData: results,
+    isSearchingDetails: isSearching,
+    searchDetails,
+  };
 };

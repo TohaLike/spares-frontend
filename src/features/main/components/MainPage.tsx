@@ -1,13 +1,10 @@
 "use client";
 import React, { useState } from "react";
 import { useDetails } from "../hooks";
-import { useDebounce } from "use-debounce";
 import {
-  FormControl,
-  InputLabel,
-  MenuItem,
+  Box,
+  Button,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
@@ -17,64 +14,73 @@ import {
   TextField,
 } from "@mui/material";
 
-const rows = [
-  { id: 1, name: "Иван", role: "Admin" },
-  { id: 2, name: "Анна", role: "User" },
-  { id: 3, name: "Петр", role: "User" },
-  { id: 4, name: "Света", role: "Moderator" },
-];
-
 export const MainPage: React.FC = () => {
-  const [search, setSearch] = useState("");
-  const [role, setRole] = useState("");
+  const [value, setValue] = useState<string>("");
 
-  const [debounceText] = useDebounce(search, 1000);
+  const { detailsData, isSearchingDetails, searchDetails } = useDetails();
 
-  const { detailsData, isLoading } = useDetails(debounceText);
-
-  const filtered = rows.filter((row) => {
-    const matchesSearch = row.name.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = role ? row.role === role : true;
-    return matchesSearch && matchesRole;
-  });
-
-  console.log(detailsData);
+  const handleSearch = () => {
+    searchDetails(value);
+  };
 
   return (
     <div>
       <Paper sx={{ p: 2 }}>
-        <TextField
-          label="Поиск"
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <TextField
+            label="Поиск по артикулу"
+            variant="outlined"
+            size="small"
+            fullWidth
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <Button variant="contained" onClick={handleSearch} disabled={value.trim() === ""}>Найти</Button>
+        </Box>
 
         <TableContainer component={Paper} sx={{ mt: 2 }}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Имя</TableCell>
-                <TableCell>Роль</TableCell>
+                <TableCell sx={{ width: "10%" }}>ID</TableCell>
+                <TableCell sx={{ width: "20%" }}>Артикул</TableCell>
+                <TableCell sx={{ width: "25%" }}>Производитель</TableCell>
+                <TableCell sx={{ width: "45%" }}>Наименование</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filtered.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>{row.id}</TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.role}</TableCell>
-                </TableRow>
-              ))}
-              {filtered.length === 0 && (
+              {isSearchingDetails && (
                 <TableRow>
-                  <TableCell colSpan={3} align="center">
-                    Нет данных
+                  <TableCell colSpan={4} align="center">
+                    Загрузка...
                   </TableCell>
                 </TableRow>
               )}
+
+              {!isSearchingDetails && detailsData.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    Ничего не найдено
+                  </TableCell>
+                </TableRow>
+              )}
+
+              {!isSearchingDetails &&
+                detailsData.map(
+                  ({
+                    id,
+                    searchCode,
+                    manufacturerDescription,
+                    description,
+                  }) => (
+                    <TableRow key={id}>
+                      <TableCell>{id}</TableCell>
+                      <TableCell>{searchCode || "..."}</TableCell>
+                      <TableCell>{manufacturerDescription}</TableCell>
+                      <TableCell>{description || "No description"}</TableCell>
+                    </TableRow>
+                  )
+                )}
             </TableBody>
           </Table>
         </TableContainer>

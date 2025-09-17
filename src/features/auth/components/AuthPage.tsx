@@ -1,7 +1,6 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import { Box, Button, Typography } from "@mui/material";
-import axiosWithAuth from "@/shared/api";
 import { authService } from "../services";
 import { useRouter } from "next/navigation";
 
