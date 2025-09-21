@@ -5,6 +5,7 @@ import { DetailsProps } from "../types";
 export const useDetails = () => {
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [results, setResults] = useState<DetailsProps[]>([]);
+  const [error, setError] = useState<string>("");
 
   const searchDetails = async (code: string) => {
     setIsSearching(true);
@@ -13,8 +14,8 @@ export const useDetails = () => {
       const data = await detailsService.getDetails(code);
       setResults(data);
       setIsSearching(false);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      setError(error.message as string);
       setResults([]);
     } finally {
       setIsSearching(false);
@@ -25,5 +26,6 @@ export const useDetails = () => {
     detailsData: results,
     isSearchingDetails: isSearching,
     searchDetails,
+    error,
   };
 };

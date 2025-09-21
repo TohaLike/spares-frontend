@@ -5,6 +5,8 @@ class AuthService {
     try {
       const response = await $api.post("/auth");
 
+      localStorage.setItem("token", response.data.token);
+
       return response.data;
     } catch (error) {
       throw error;

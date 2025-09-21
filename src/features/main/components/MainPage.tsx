@@ -14,13 +14,62 @@ import {
   TextField,
 } from "@mui/material";
 
-export const MainPage: React.FC = () => {
-  const [value, setValue] = useState<string>("");
+interface Detail {
+  id: number;
+  searchCode?: string;
+  manufacturerDescription: string;
+  description?: string;
+}
 
-  const { detailsData, isSearchingDetails, searchDetails } = useDetails();
+export const MainPage: React.FC = () => {
+  const [searchValue, setSearchValue] = useState<string>("");
+
+  const { detailsData, isSearchingDetails, searchDetails, error } =
+    useDetails();
 
   const handleSearch = () => {
-    searchDetails(value);
+    if (searchValue.trim()) searchDetails(searchValue.trim());
+  };
+
+  const renderTableContent = () => {
+    if (error) {
+      return (
+        <TableRow>
+          <TableCell colSpan={4} align="center">
+            {error}
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    if (isSearchingDetails) {
+      return (
+        <TableRow>
+          <TableCell colSpan={4} align="center">
+            Загрузка...
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    if (!detailsData.length) {
+      return (
+        <TableRow>
+          <TableCell colSpan={4} align="center">
+            Ничего не найдено
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return detailsData.map((detail: Detail) => (
+      <TableRow key={detail.id}>
+        <TableCell>{detail.id}</TableCell>
+        <TableCell>{detail.searchCode || "..."}</TableCell>
+        <TableCell>{detail.manufacturerDescription}</TableCell>
+        <TableCell>{detail.description || "No description"}</TableCell>
+      </TableRow>
+    ));
   };
 
   return (
@@ -32,10 +81,17 @@ export const MainPage: React.FC = () => {
             variant="outlined"
             size="small"
             fullWidth
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
-          <Button variant="contained" onClick={handleSearch} disabled={value.trim() === ""}>Найти</Button>
+          <Button
+            variant="contained"
+            onClick={handleSearch}
+            disabled={!searchValue.trim() || isSearchingDetails}
+          >
+            Найти
+          </Button>
         </Box>
 
         <TableContainer component={Paper} sx={{ mt: 2 }}>
@@ -48,40 +104,7 @@ export const MainPage: React.FC = () => {
                 <TableCell sx={{ width: "45%" }}>Наименование</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
-              {isSearchingDetails && (
-                <TableRow>
-                  <TableCell colSpan={4} align="center">
-                    Загрузка...
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {!isSearchingDetails && detailsData.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} align="center">
-                    Ничего не найдено
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {!isSearchingDetails &&
-                detailsData.map(
-                  ({
-                    id,
-                    searchCode,
-                    manufacturerDescription,
-                    description,
-                  }) => (
-                    <TableRow key={id}>
-                      <TableCell>{id}</TableCell>
-                      <TableCell>{searchCode || "..."}</TableCell>
-                      <TableCell>{manufacturerDescription}</TableCell>
-                      <TableCell>{description || "No description"}</TableCell>
-                    </TableRow>
-                  )
-                )}
-            </TableBody>
+            <TableBody>{renderTableContent()}</TableBody>
           </Table>
         </TableContainer>
       </Paper>
